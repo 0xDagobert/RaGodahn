@@ -1,32 +1,38 @@
 package main
 
 import (
-	"unsafe"
-
-	"golang.org/x/sys/windows"
+	p "RaGodahn/pslistwin"
+	"fmt"
+	"os"
+	"slices"
 )
 
-// MessageBox of Win32 API.
-func MessageBox(hwnd uintptr, caption, title string, flags uint) int {
+func getProcess() int {
+	processList, err := p.Processes()
+	var list []int
+	var i int
+	if err != nil {
+		fmt.Println("cannot read processes")
+		os.Exit(3)
+	}
 
-	ret, _, _ := windows.NewLazyDLL("user32.dll").NewProc("MessageBoxW").Call(
-		uintptr(hwnd),
-		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(caption))),
-		uintptr(unsafe.Pointer(windows.StringToUTF16Ptr(title))),
-		uintptr(flags))
+	for x := range processList {
+		var process p.Process = processList[x]
+		fmt.Printf("%d\t%s\n", process.Pid(), process.Executable())
+		list = append(list, process.Pid())
+	}
 
-	return int(ret)
-}
+	fmt.Printf("Please input the PID of the process you wish to inject:")
+	fmt.Scanln(&i)
 
-// MessageBoxPlain of Win32 API.
-func MessageBoxPlain(title, caption string) int {
-	const (
-		NULL  = 0
-		MB_OK = 0
-	)
-	return MessageBox(NULL, caption, title, MB_OK)
+	if !slices.Contains(list, i) {
+		fmt.Println("PID inputed does not match any running process")
+		os.Exit(3)
+	}
+	return i
+
 }
 
 func main() {
-	MessageBoxPlain("Test", "Hello World!")
+	getProcess()
 }
