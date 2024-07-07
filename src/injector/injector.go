@@ -9,7 +9,7 @@ import (
 	"golang.org/x/sys/windows"
 )
 
-func CreateRemoteThread(shellcode []byte, pid syscall.ProcessInformation) {
+func CreateRemoteThread(shellcode []byte, pid *syscall.ProcessInformation) {
 
 	kernel32 := windows.NewLazySystemDLL("kernel32.dll")
 	virtualAllocEx := kernel32.NewProc("VirtualAllocEx")
