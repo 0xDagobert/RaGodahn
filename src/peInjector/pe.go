@@ -48,19 +48,18 @@ func CreateNewSection(ntdll syscall.Handle) (uintptr, error) {
 }
 
 func CreateProcessInt(kernel32 syscall.Handle, procPath string) (uintptr, uintptr, error) {
-	//RtlDosPathNameToNtPathName_U
+
 	CreateProcessInternalW, err := syscall.GetProcAddress(
 		syscall.Handle(kernel32), "CreateProcessInternalW")
 	if err != nil {
 		log.Fatalln(err)
 		return 0, 0, err
 	}
-	var si windows.StartupInfo
-	var pi windows.ProcessInformation
+	var si syscall.StartupInfo
+	var pi syscall.ProcessInformation
 	log.Println(procPath)
 	unsptr, _ := syscall.UTF16PtrFromString(procPath)
-	r, a, err := syscall.SyscallN(uintptr(CreateProcessInternalW),
-		12,
+	syscall.SyscallN(uintptr(CreateProcessInternalW),
 		0,                                 // IN HANDLE hUserToken,
 		uintptr(unsafe.Pointer(unsptr)),   // IN LPCWSTR lpApplicationName,
 		0,                                 // IN LPWSTR lpCommandLine,
@@ -73,11 +72,7 @@ func CreateProcessInt(kernel32 syscall.Handle, procPath string) (uintptr, uintpt
 		uintptr(unsafe.Pointer(&si)),      // IN LPSTARTUPINFOW lpStartupInfo,
 		uintptr(unsafe.Pointer(&pi)),      // IN LPPROCESS_INFORMATION lpProcessInformation,
 		0)                                 // OUT PHANDLE hNewToken)
-	if r > 1 { // hack for error code invalid function
-		log.Printf("CreateProcessInternalW ERROR CODE: %x", r)
-		return 0, 0, err
-	}
-	log.Printf("%x %x %s %x bla", r, a, err, pi.Process)
+
 	return uintptr(pi.Process), uintptr(pi.Thread), nil
 }
 
