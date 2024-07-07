@@ -173,17 +173,21 @@ func Memcpy(dest uintptr, src unsafe.Pointer, len size_t) uintptr {
 
 	cnt := len >> 3
 	var i size_t = 0
+	log.Println("bla")
 	for i = 0; i < cnt; i++ {
 		var pdest *uint64 = (*uint64)(usp(uintptr(dest) + uintptr(8*i)))
 		var psrc *uint64 = (*uint64)(usp(uintptr(src) + uintptr(8*i)))
 		*pdest = *psrc
+		log.Println("bla2")
 	}
 	left := len & 7
+	log.Println("bla3")
 	for i = 0; i < left; i++ {
 		var pdest *uint8 = (*uint8)(usp(uintptr(dest) + uintptr(8*cnt+i)))
 		var psrc *uint8 = (*uint8)(usp(uintptr(src) + uintptr(8*cnt+i)))
 
 		*pdest = *psrc
+		log.Println("bla4")
 	}
 	log.Println(dest)
 	return dest
