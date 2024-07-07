@@ -24,8 +24,7 @@ func CreateNewSection(ntdll syscall.Handle) (uintptr, error) {
 	}
 	var section uintptr
 	size := int64(0xF001F)
-	r, a, err := syscall.SyscallN(uintptr(NtCreateSection),
-		7,
+	syscall.SyscallN(uintptr(NtCreateSection),
 		uintptr(unsafe.Pointer(&section)), // PHANDLE            SectionHandle,
 		SECTION_RWX,                       // ACCESS_MASK        DesiredAccess,
 		0,                                 // POBJECT_ATTRIBUTES ObjectAttributes,
@@ -35,11 +34,7 @@ func CreateNewSection(ntdll syscall.Handle) (uintptr, error) {
 		0,                                 // HANDLE             FileHandle
 		0,
 		0)
-	if r != 0 {
-		log.Printf("NtCreateSection ERROR CODE: %x", r)
-		return 0, err
-	}
-	log.Printf("%x %x %s", r, a, err)
+
 	if section == 0 {
 		return 0, fmt.Errorf("NtCreateSection à échoué")
 	}
