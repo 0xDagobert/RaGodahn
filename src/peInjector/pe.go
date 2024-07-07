@@ -67,7 +67,7 @@ func CreateProcessInt(kernel32 syscall.Handle, procPath string) (uintptr, uintpt
 		uintptr(unsafe.Pointer(&si)),      // IN LPSTARTUPINFOW lpStartupInfo,
 		uintptr(unsafe.Pointer(&pi)),      // IN LPPROCESS_INFORMATION lpProcessInformation,
 		0)                                 // OUT PHANDLE hNewToken)
-	log.Println(uintptr(pi.Process), uintptr(pi.Thread))
+	log.Println(uintptr(pi.Process), uintptr(pi.Thread), "\n")
 	return uintptr(pi.Process), uintptr(pi.Thread), nil
 }
 
@@ -85,8 +85,7 @@ func MapViewOfSection(
 		return 0, 0, err
 	}
 	var sectionBaseAddr uintptr
-	r, a, err := syscall.SyscallN(uintptr(ZwMapViewOfSection),
-		10,
+	syscall.SyscallN(uintptr(ZwMapViewOfSection),
 		section, // HANDLE          SectionHandle,
 		phandle, // HANDLE          ProcessHandle,
 		uintptr(unsafe.Pointer(&sectionBaseAddr)), // PVOID           *BaseAddress,
@@ -99,12 +98,7 @@ func MapViewOfSection(
 		windows.PAGE_READWRITE,             // ULONG           Win32Protect
 		0,
 		0)
-	if r != 0 {
-		log.Printf("ZwMapViewOfSection ERROR CODE: %x", r)
-		return 0, 0, err
-	}
-	log.Printf("%x %x %s", r, a, err)
-
+	log.Println(sectionBaseAddr, viewSize, "\n")
 	return sectionBaseAddr, viewSize, nil
 }
 
