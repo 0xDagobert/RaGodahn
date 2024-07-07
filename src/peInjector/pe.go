@@ -41,7 +41,7 @@ func CreateNewSection(ntdll syscall.Handle) (uintptr, error) {
 	}
 	log.Printf("%x %x %s", r, a, err)
 	if section == 0 {
-		return 0, fmt.Errorf("NtCreateSection failed for unknown reason")
+		return 0, fmt.Errorf("NtCreateSection à échoué")
 	}
 	log.Printf("Section: %0x\n", section)
 	return section, nil
@@ -58,10 +58,11 @@ func CreateProcessInt(kernel32 syscall.Handle, procPath string) (uintptr, uintpt
 	var si windows.StartupInfo
 	var pi windows.ProcessInformation
 	log.Println(procPath)
+	unsptr, _ := syscall.UTF16PtrFromString(procPath)
 	r, a, err := syscall.SyscallN(uintptr(CreateProcessInternalW),
 		12,
-		0, // IN HANDLE hUserToken,
-		uintptr(unsafe.Pointer(syscall.StringToUTF16Ptr(procPath))), // IN LPCWSTR lpApplicationName,
+		0,                                 // IN HANDLE hUserToken,
+		uintptr(unsafe.Pointer(unsptr)),   // IN LPCWSTR lpApplicationName,
 		0,                                 // IN LPWSTR lpCommandLine,
 		0,                                 // IN LPSECURITY_ATTRIBUTES lpProcessAttributes,
 		0,                                 // IN LPSECURITY_ATTRIBUTES lpThreadAttributes,

