@@ -85,8 +85,8 @@ func main() {
 	var mode string
 	flag.StringVar(&mode, "mode", "", "Injection mode\n"+
 		"PE\n"+
-		"Process auto\n"+
-		"Process manuel\n")
+		"Process-auto\n"+
+		"Process-manuel\n")
 	flag.Parse()
 
 	switch mode {
