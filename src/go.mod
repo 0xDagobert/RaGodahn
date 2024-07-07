@@ -14,8 +14,4 @@ replace RaGodahn/pslistwin => ./PsListWin
 
 replace RaGodahn/injector => ./injector
 
-replace RaGodahn/packer => ./packer
-
-replace RaGodahn/payload => ./payload
-
 replace RaGodahn/process_a_injector => ./processA
