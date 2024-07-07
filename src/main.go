@@ -105,6 +105,7 @@ func processManuel() {
 func main() {
 
 	var mode string
+	var i string
 	flag.StringVar(&mode, "mode", "", "Injection mode\n"+
 		"PE\n"+
 		"Process-auto\n"+
@@ -113,7 +114,9 @@ func main() {
 
 	switch mode {
 	case "PE":
-		PE("C:\\Windows\\System32\\notepad.exe")
+		fmt.Print("ENtrez le chemin du binaire à infecter: ")
+		fmt.Scanf("%s ", &i)
+		PE(i)
 		break
 	case "Process-auto":
 		processAuto()
