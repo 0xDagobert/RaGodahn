@@ -81,7 +81,7 @@ func main() {
 	case "Process-auto":
 		processAuto()
 		break
-	case "Process manuel":
+	case "Process-manuel":
 		processManuel()
 		break
 	default:
