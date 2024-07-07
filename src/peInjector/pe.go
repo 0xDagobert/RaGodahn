@@ -72,7 +72,7 @@ func CreateProcessInt(kernel32 syscall.Handle, procPath string) (uintptr, uintpt
 		uintptr(unsafe.Pointer(&si)),      // IN LPSTARTUPINFOW lpStartupInfo,
 		uintptr(unsafe.Pointer(&pi)),      // IN LPPROCESS_INFORMATION lpProcessInformation,
 		0)                                 // OUT PHANDLE hNewToken)
-
+	log.Println(uintptr(pi.Process), uintptr(pi.Thread))
 	return uintptr(pi.Process), uintptr(pi.Thread), nil
 }
 
