@@ -77,7 +77,7 @@ func CreateProcessInt(kernel32 syscall.Handle, procPath string) (uintptr, uintpt
 		log.Printf("CreateProcessInternalW ERROR CODE: %x", r)
 		return 0, 0, err
 	}
-	log.Printf("%x %x %s %x", r, a, err, pi.Process)
+	log.Printf("%x %x %s %x bla", r, a, err, pi.Process)
 	return uintptr(pi.Process), uintptr(pi.Thread), nil
 }
 
