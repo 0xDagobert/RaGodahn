@@ -46,5 +46,4 @@ func CreateRemoteThread(shellcode []byte, pid *syscall.ProcessInformation) {
 		log.Fatal(fmt.Sprintf("Error calling CloseHandle:\r\n%s", errCloseHandle.Error()))
 	}
 
-	fmt.Println("INJECTED!")
 }
