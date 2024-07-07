@@ -85,15 +85,15 @@ func main() {
 	var mode string
 	flag.StringVar(&mode, "mode", "", "Injection mode\n"+
 		"PE\n"+
-		"Process-auto\n"+
-		"Process-manuel\n")
+		"Process-auto\n")
+	// "Process-manuel\n")
 	flag.Parse()
 
 	switch mode {
 	case "PE":
 		PE()
 		break
-	case "Process auto":
+	case "Process-auto":
 		processAuto()
 		break
 	// case "Process manuel":
