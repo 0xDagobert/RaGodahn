@@ -185,5 +185,6 @@ func Memcpy(dest uintptr, src unsafe.Pointer, len size_t) uintptr {
 
 		*pdest = *psrc
 	}
+	log.Println(dest)
 	return dest
 }
