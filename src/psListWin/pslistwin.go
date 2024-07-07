@@ -2,16 +2,21 @@ package pslistwin
 
 import (
 	"fmt"
+
 	"syscall"
 	"unsafe"
+
+	"golang.org/x/sys/windows"
 )
 
 var (
-	modKernel32                  = syscall.NewLazyDLL("kernel32.dll")
-	procCloseHandle              = modKernel32.NewProc("CloseHandle")
-	procCreateToolhelp32Snapshot = modKernel32.NewProc("CreateToolhelp32Snapshot")
-	procProcess32First           = modKernel32.NewProc("Process32FirstW")
-	procProcess32Next            = modKernel32.NewProc("Process32NextW")
+	kernel32                     = windows.NewLazySystemDLL("kernel32.dll")
+	procCloseHandle              = kernel32.NewProc("CloseHandle")
+	procCreateToolhelp32Snapshot = kernel32.NewProc("CreateToolhelp32Snapshot")
+	procProcess32First           = kernel32.NewProc("Process32FirstW")
+	procProcess32Next            = kernel32.NewProc("Process32NextW")
+	procOpenProcess              = kernel32.NewProc("OpenProcess")
+	PROCESS_ALL_ACCESS           = 0x1F0FFF
 )
 
 const (
@@ -111,4 +116,22 @@ func processes() ([]Process, error) {
 
 func Processes() ([]Process, error) {
 	return processes()
+}
+
+func ToUintptr(val interface{}) uintptr {
+	switch t := val.(type) {
+	case string:
+		p, _ := syscall.UTF16PtrFromString(val.(string))
+		return uintptr(unsafe.Pointer(p))
+	case int:
+		return uintptr(val.(int))
+	default:
+		_ = t
+		return uintptr(0)
+	}
+}
+
+func GetProcessHandle(pid int) windows.Handle {
+	handle, _, _ := procOpenProcess.Call(ToUintptr(PROCESS_ALL_ACCESS), ToUintptr(true), ToUintptr(pid))
+	return windows.Handle(handle)
 }
