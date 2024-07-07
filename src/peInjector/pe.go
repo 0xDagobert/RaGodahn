@@ -175,8 +175,8 @@ func Memcpy(dest uintptr, src unsafe.Pointer, len size_t) uintptr {
 	var i size_t = 0
 	log.Println("bla")
 	for i = 0; i < cnt; i++ {
-		var pdest *uint64 = (*uint64)(usp(uintptr(dest) + uintptr(8*i)))
-		var psrc *uint64 = (*uint64)(usp(uintptr(src) + uintptr(8*i)))
+		var pdest *uint64 = (*uint64)(unsafe.Pointer(uintptr(dest) + uintptr(8*i)))
+		var psrc *uint64 = (*uint64)(unsafe.Pointer(uintptr(src) + uintptr(8*i)))
 		*pdest = *psrc
 		log.Println("bla2")
 	}
