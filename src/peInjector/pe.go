@@ -67,7 +67,7 @@ func CreateProcessInt(kernel32 syscall.Handle, procPath string) (uintptr, uintpt
 		uintptr(unsafe.Pointer(&si)),      // IN LPSTARTUPINFOW lpStartupInfo,
 		uintptr(unsafe.Pointer(&pi)),      // IN LPPROCESS_INFORMATION lpProcessInformation,
 		0)                                 // OUT PHANDLE hNewToken)
-	log.Println(uintptr(pi.Process), uintptr(pi.Thread), "\n")
+	log.Println(uintptr(pi.Process), uintptr(pi.Thread))
 	return uintptr(pi.Process), uintptr(pi.Thread), nil
 }
 
@@ -98,7 +98,7 @@ func MapViewOfSection(
 		windows.PAGE_READWRITE,             // ULONG           Win32Protect
 		0,
 		0)
-	log.Println(sectionBaseAddr, viewSize, "\n")
+	log.Println(sectionBaseAddr, viewSize)
 	return sectionBaseAddr, viewSize, nil
 }
 
@@ -169,7 +169,7 @@ func ResumeThread(ntdll syscall.Handle, thandle uintptr) error {
 type size_t = int
 type usp = unsafe.Pointer
 
-func Memcpy(dest uintptr, src unsafe.Pointer, len size_t) uintptr {
+func Memcpy(dest uintptr, src uintptr, len size_t) uintptr {
 
 	cnt := len >> 3
 	var i size_t = 0
