@@ -1,6 +1,10 @@
 package pe
 
+//include <string.h>
+//CGO_ENABLED=1
+
 import (
+	"C"
 	"fmt"
 	"log"
 	"syscall"
@@ -157,24 +161,27 @@ type usp = unsafe.Pointer
 
 func Memcpy(dest uintptr, src unsafe.Pointer, len size_t) uintptr {
 
-	cnt := len >> 3
-	var i size_t = 0
-	log.Println("bla")
-	for i = 0; i < cnt; i++ {
-		var pdest *uint64 = (*uint64)(usp(uintptr(dest) + uintptr(16*i)))
-		var psrc *uint64 = (*uint64)(usp(uintptr(src) + uintptr(16*i)))
-		*pdest = *psrc
-		log.Println("bla2")
-	}
-	left := len & 7
-	log.Println("bla3")
-	for i = 0; i < left; i++ {
-		var pdest *uint8 = (*uint8)(usp(uintptr(dest) + uintptr(16*cnt+i)))
-		var psrc *uint8 = (*uint8)(usp(uintptr(src) + uintptr(16*cnt+i)))
+	// cnt := len >> 3
+	// var i size_t = 0
+	// log.Println("bla")
+	// for i = 0; i < cnt; i++ {
+	// 	var pdest *uint64 = (*uint64)(usp(uintptr(dest) + uintptr(16*i)))
+	// 	var psrc *uint64 = (*uint64)(usp(uintptr(src) + uintptr(16*i)))
+	// 	*pdest = *psrc
+	// 	log.Println("bla2")
+	// }
+	// left := len & 7
+	// log.Println("bla3")
+	// for i = 0; i < left; i++ {
+	// 	var pdest *uint8 = (*uint8)(usp(uintptr(dest) + uintptr(16*cnt+i)))
+	// 	var psrc *uint8 = (*uint8)(usp(uintptr(src) + uintptr(16*cnt+i)))
 
-		*pdest = *psrc
-		log.Println("bla4")
-	}
+	// 	*pdest = *psrc
+	// 	log.Println("bla4")
+	// }
+	// log.Println(dest)
+	// return dest
+	C.memcpy(dest, unsafe.Pointer(&src[0]), C.size_t(len))
 	log.Println(dest)
 	return dest
 }
